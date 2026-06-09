@@ -1,0 +1,5 @@
+﻿{
+  "challenge": "The flag has been encoded with ROT13, then Base64. Reverse both to get the flag.",
+  "encoded_flag": "b3lucHhjcmV5e2UwZzEzXzRhcV9vNGYzNjRfcTBob3kzX2dlMGhveTN9",
+  "hint": "Step 1: Decode Base64. Step 2: Apply ROT13 to the result."
+}
