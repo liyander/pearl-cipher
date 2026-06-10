@@ -1,47 +1,44 @@
-FROM python:3.11-slim
+FROM ubuntu:22.04
 
-WORKDIR /app
+ENV DEBIAN_FRONTEND=noninteractive
 
-RUN pip install --no-cache-dir flask gunicorn
+RUN apt-get update && \
+    apt-get install -y \
+    ttyd \
+    python3 \
+    coreutils \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN useradd -m -s /bin/bash ctfuser && \
+    echo "ctfuser:ctfuser" | chpasswd
+
+WORKDIR /home/ctfuser
 
 COPY cipher.py .
-COPY output.json ./files/output.json
 
-COPY <<'EOF' app.py
-from flask import Flask, send_file, jsonify
-import os
+RUN python3 cipher.py > output.json && \
+    chown ctfuser:ctfuser output.json && \
+    rm cipher.py
 
-app = Flask(__name__)
+RUN echo '#!/bin/bash' > /home/ctfuser/hint.txt && \
+    echo 'Welcome to the Pearl Cipher challenge!' >> /home/ctfuser/hint.txt && \
+    echo '' >> /home/ctfuser/hint.txt && \
+    echo 'The flag is encoded with ROT13, then Base64.' >> /home/ctfuser/hint.txt && \
+    echo '' >> /home/ctfuser/hint.txt && \
+    echo 'Try these commands:' >> /home/ctfuser/hint.txt && \
+    echo '  cat output.json                    - Read the file' >> /home/ctfuser/hint.txt && \
+    echo '  echo "<base64>" | base64 -d        - Decode Base64' >> /home/ctfuser/hint.txt && \
+    echo '  echo "<text>" | tr "a-zA-Z" "n-za-mN-ZA-M"  - Apply ROT13' >> /home/ctfuser/hint.txt && \
+    echo '' >> /home/ctfuser/hint.txt && \
+    echo 'One-liner:' >> /home/ctfuser/hint.txt && \
+    echo '  cat output.json | grep encoded_flag | cut -d"\"" -f4 | base64 -d | tr "a-zA-Z" "n-za-mN-ZA-M"' >> /home/ctfuser/hint.txt && \
+    chmod 444 /home/ctfuser/hint.txt && \
+    chown ctfuser:ctfuser /home/ctfuser/hint.txt
 
-@app.route('/')
-def index():
-    return jsonify({
-        "challenge": "Pearl Cipher",
-        "category": "Cryptography",
-        "difficulty": "Easy",
-        "points": 150,
-        "download": "/download/output.json",
-        "instructions": [
-            "Download output.json",
-            "Decode the Base64 string",
-            "Apply ROT13 to the result",
-            "Get the flag!"
-        ]
-    })
+RUN echo '#!/bin/bash' > /entrypoint.sh && \
+    echo 'exec ttyd -p 10000 -W login -f ctfuser' >> /entrypoint.sh && \
+    chmod +x /entrypoint.sh
 
-@app.route('/download/output.json')
-def download():
-    return send_file('files/output.json', as_attachment=True, download_name='output.json')
+EXPOSE 10000
 
-@app.route('/health')
-def health():
-    return jsonify({"status": "ok"})
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
-EOF
-
-ENV PORT=5000
-EXPOSE $PORT
-
-CMD gunicorn app:app --bind 0.0.0.0:$PORT --workers 1
+CMD ["/entrypoint.sh"]

@@ -9,8 +9,8 @@
 | **Difficulty** | Easy |
 | **Points** | 150 |
 | **Flag Format** | `blackperl{...}` |
-| **Access** | `output.json` |
-| **Technologies** | Base64, ROT13 |
+| **Access** | Web browser (ttyd terminal) |
+| **Technologies** | Base64, ROT13, ttyd |
 
 ## Description
 
@@ -33,23 +33,49 @@ Decode a Base64 string, then apply ROT13 to get the flag.
 
 ## Hints
 
-1. The file tells you it's ROT13 then Base64.
+1. Read `output.json` to find the encoded flag.
 2. Reverse the order: decode Base64 first, then ROT13.
 3. Use `base64 -d` for Base64 and `tr 'a-zA-Z' 'n-za-mN-ZA-M'` for ROT13.
 
-## Tools Required
+## Tools Included in Terminal
 
-- `base64` command
-- `tr` command or online ROT13 decoder
+- `base64` - Decode Base64 data
+- `tr` - Apply ROT13 transformation
+- `python3` - Optional for scripting
+- `cat`, `grep`, `cut` - Text processing
+
+## Access Method
+
+This challenge uses **ttyd** (web-based terminal) so players can access it through a browser:
+
+1. Open the challenge URL in a web browser
+2. A terminal interface appears
+3. Login with credentials: `ctfuser` / `ctfuser`
+4. Solve the challenge using included tools
 
 ## Setup
 
+### Local (Docker)
 ```bash
-python3 cipher.py > output.json
+docker build -t pearl-cipher .
+docker run -d -p 10000:10000 --name pearl-cipher pearl-cipher
 ```
 
-Distribute `output.json` to players.
+Visit http://localhost:10000
+
+### Render Deployment
+1. Push to GitHub
+2. Create Web Service on Render
+3. Set Root Directory: `challenges/pearl-cipher`
+4. Set Runtime: `Docker`
+5. Add env var: `PORT=10000`
+6. Deploy
+
+Players access via the Render URL in their browser.
 
 ## Files Provided
 
-- `output.json` — contains the double-encoded flag
+- Web-based terminal access
+- Credentials: `ctfuser` / `ctfuser`
+- `output.json` in home directory
+- Hint file at `/home/ctfuser/hint.txt`
